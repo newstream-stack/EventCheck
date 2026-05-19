@@ -1,0 +1,112 @@
+.scanner-page { max-width: 640px; margin: 0 auto; }
+
+.scanner-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.event-name-sub { color: var(--gray-500); margin-top: 2px; font-size: 14px; }
+
+.scanner-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+
+.video-container {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: black;
+  aspect-ratio: 1;
+  box-shadow: var(--shadow-md);
+}
+
+.scanner-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.scan-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.scan-frame {
+  width: 200px;
+  height: 200px;
+  border: 3px solid white;
+  border-radius: 12px;
+  box-shadow: 0 0 0 9999px rgba(0,0,0,.4);
+  position: relative;
+}
+
+.scan-frame::before, .scan-frame::after {
+  content: '';
+  position: absolute;
+  width: 30px; height: 30px;
+  border-color: #4f46e5;
+  border-style: solid;
+}
+.scan-frame::before { top: -3px; left: -3px; border-width: 4px 0 0 4px; border-radius: 8px 0 0 0; }
+.scan-frame::after { bottom: -3px; right: -3px; border-width: 0 4px 4px 0; border-radius: 0 0 8px 0; }
+
+.scan-hint {
+  color: white;
+  font-size: 14px;
+  background: rgba(0,0,0,.5);
+  padding: 6px 16px;
+  border-radius: 100px;
+  margin-top: 8px;
+}
+
+.result-card {
+  width: 100%;
+  max-width: 480px;
+  border-radius: 16px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  animation: slideUp .3s ease;
+}
+
+.result-card.success {
+  background: var(--success-light);
+  color: #15803d;
+}
+
+.result-card.error {
+  background: var(--danger-light);
+  color: #dc2626;
+}
+
+.result-title { font-size: 20px; font-weight: 700; }
+.result-name { font-size: 28px; font-weight: 700; margin: 4px 0; }
+.result-details {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+  font-size: 14px;
+  opacity: .8;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
