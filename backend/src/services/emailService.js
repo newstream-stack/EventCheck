@@ -1,20 +1,14 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
-function getTransporter() {
-  return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT) || 587,
-    secure: Number(process.env.SMTP_PORT) === 465,
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY);
 }
 
+const FROM = `"活動報到系統" <noreply@${process.env.MAIL_DOMAIN || 'ct.org.tw'}>`;
+
 export async function sendPasswordEmail(to, name, password) {
-  await getTransporter().sendMail({
-    from: `"活動報到系統" <${process.env.SMTP_FROM}>`,
+  await getResend().emails.send({
+    from: FROM,
     to,
     subject: '您的系統帳號已建立',
     html: `
@@ -59,23 +53,17 @@ function applyTemplate(template, vars) {
 
 export async function sendQRCodeEmail(to, name, regId, eventName, qrCodeDataUrl, template = null) {
   const base64Data = qrCodeDataUrl.replace(/^data:image\/png;base64,/, '');
-  const qrImgTag = '<img src="cid:qrcode" alt="QR Code" style="width:250px;height:250px;" />';
+  const qrImgTag = `<img src="data:image/png;base64,${base64Data}" alt="QR Code" style="width:250px;height:250px;" />`;
 
   const vars = { name, reg_id: regId.split('-').pop(), event_name: eventName, qr_code: qrImgTag };
   const subject = applyTemplate(template?.subject || DEFAULT_SUBJECT, vars);
   const html = applyTemplate(template?.body_html || DEFAULT_BODY, vars);
 
-  await getTransporter().sendMail({
-    from: `"活動報到系統" <${process.env.SMTP_FROM}>`,
+  await getResend().emails.send({
+    from: FROM,
     to,
     subject,
     html,
-    attachments: [{
-      filename: 'qrcode.png',
-      content: base64Data,
-      encoding: 'base64',
-      cid: 'qrcode',
-    }],
   });
 }
 
