@@ -42,7 +42,7 @@ async function getEventTemplate(eid) {
 }
 
 async function sendParticipantQR(participant, eventName, template) {
-  const qrDataUrl = await QRCode.toDataURL(participant.qr_token, { width: 400 });
+  const qrDataUrl = await QRCode.toDataURL(participant.qr_token, { width: 200, margin: 1 });
   await sendQRCodeEmail(participant.email, participant.name, participant.reg_id, eventName, qrDataUrl, template);
 }
 
