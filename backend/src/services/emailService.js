@@ -51,8 +51,9 @@ function applyTemplate(template, vars) {
   return template.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] ?? '');
 }
 
-export async function sendQRCodeEmail(to, name, regId, eventName, qrCodeDataUrl, template = null) {
-  const qrImgTag = `<img src="${qrCodeDataUrl}" alt="QR Code" width="200" height="200" style="width:200px;height:200px;display:block;margin:0 auto;" />`;
+export async function sendQRCodeEmail(to, name, regId, eventName, qrToken, template = null) {
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrToken)}`;
+  const qrImgTag = `<img src="${qrUrl}" alt="QR Code" width="200" height="200" style="width:200px;height:200px;display:block;margin:0 auto;" />`;
 
   const vars = { name, reg_id: regId.split('-').pop(), event_name: eventName, qr_code: qrImgTag };
   const subject = applyTemplate(template?.subject || DEFAULT_SUBJECT, vars);
