@@ -76,8 +76,11 @@ Accepted column headers (Chinese or English):
 | `GOOGLE_SHEETS_ID` | Spreadsheet ID from URL |
 | `GOOGLE_SERVICE_ACCOUNT_EMAIL` | Service account email |
 | `GOOGLE_PRIVATE_KEY` | Private key with literal `\n` (sheetsService replaces them) |
-| `GMAIL_USER` | Gmail/Workspace sender address |
-| `GMAIL_APP_PASSWORD` | 16-char Google App Password |
+| `SMTP_HOST` | SMTP server host (e.g. `smtp.gmail.com`) |
+| `SMTP_PORT` | SMTP port (default 587) |
+| `SMTP_USER` | SMTP username / Gmail address |
+| `SMTP_PASS` | SMTP password / Gmail App Password |
+| `SMTP_FROM` | Sender email address |
 | `FRONTEND_URL` | Used in email links (default `http://localhost:5173`) |
 
 ## First-run bootstrap
