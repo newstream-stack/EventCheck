@@ -53,17 +53,14 @@ function applyTemplate(template, vars) {
 
 export async function sendQRCodeEmail(to, name, regId, eventName, qrToken, template = null) {
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrToken)}`;
-  const qrImgTag = `<img src="${qrUrl}" alt="QR Code" width="200" height="200" style="width:200px;height:200px;display:block;margin:0 auto;" />`;
+  const qrImgTag = `<div style="text-align:center;padding:12px 0;">
+    <img src="${qrUrl}" alt="QR Code" width="200" height="200" style="width:200px;height:200px;display:block;margin:0 auto;" />
+    <p style="font-size:12px;color:#6b7280;margin:8px 0 0;">若看不到 QR Code，請點擊信件上方的「顯示圖片」</p>
+  </div>`;
 
   const vars = { name, reg_id: regId.split('-').pop(), event_name: eventName, qr_code: qrImgTag };
   const subject = applyTemplate(template?.subject || DEFAULT_SUBJECT, vars);
   const html = applyTemplate(template?.body_html || DEFAULT_BODY, vars);
-
-  console.log('=== EMAIL HTML DEBUG ===');
-  console.log('body_html length:', (template?.body_html || DEFAULT_BODY).length);
-  console.log('Final HTML length:', html.length);
-  console.log('Final HTML:', html);
-  console.log('=== END DEBUG ===');
 
   await getResend().emails.send({
     from: FROM,
