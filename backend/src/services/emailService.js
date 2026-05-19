@@ -2,19 +2,19 @@ import nodemailer from 'nodemailer';
 
 function getTransporter() {
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT) || 587,
+    host: 'smtp.gmail.com',
+    port: 587,
     secure: false,
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD,
     },
   });
 }
 
 export async function sendPasswordEmail(to, name, password) {
   await getTransporter().sendMail({
-    from: `"活動報到系統" <${process.env.SMTP_FROM}>`,
+    from: `"活動報到系統" <${process.env.GMAIL_USER}>`,
     to,
     subject: '您的系統帳號已建立',
     html: `
@@ -23,7 +23,7 @@ export async function sendPasswordEmail(to, name, password) {
       <p><strong>Email：</strong>${to}</p>
       <p><strong>密碼：</strong><code>${password}</code></p>
       <p>請登入後盡快修改密碼。</p>
-      <p><a href="${process.env.FRONTEND_URL}/login">點此登入系統</a></p>
+      <p><a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/login">點此登入系統</a></p>
     `,
   });
 }
@@ -66,7 +66,7 @@ export async function sendQRCodeEmail(to, name, regId, eventName, qrCodeDataUrl,
   const html = applyTemplate(template?.body_html || DEFAULT_BODY, vars);
 
   await getTransporter().sendMail({
-    from: `"活動報到系統" <${process.env.SMTP_FROM}>`,
+    from: `"活動報到系統" <${process.env.GMAIL_USER}>`,
     to,
     subject,
     html,

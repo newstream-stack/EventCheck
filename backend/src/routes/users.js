@@ -26,7 +26,12 @@ router.post('/', async (req, res) => {
   const created_at = new Date().toISOString();
 
   await appendRow('users', [user_id, name, email, hash, role, created_at]);
-  await sendPasswordEmail(email, name, password);
+
+  try {
+    await sendPasswordEmail(email, name, password);
+  } catch (err) {
+    console.error('寄送密碼 Email 失敗:', err.message);
+  }
 
   res.status(201).json({ user_id, name, email, role, created_at });
 });
