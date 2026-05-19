@@ -59,6 +59,12 @@ export async function sendQRCodeEmail(to, name, regId, eventName, qrToken, templ
   const subject = applyTemplate(template?.subject || DEFAULT_SUBJECT, vars);
   const html = applyTemplate(template?.body_html || DEFAULT_BODY, vars);
 
+  console.log('=== EMAIL HTML DEBUG ===');
+  console.log('body_html length:', (template?.body_html || DEFAULT_BODY).length);
+  console.log('Final HTML length:', html.length);
+  console.log('Final HTML:', html);
+  console.log('=== END DEBUG ===');
+
   await getResend().emails.send({
     from: FROM,
     to,
