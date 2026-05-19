@@ -52,8 +52,7 @@ function applyTemplate(template, vars) {
 }
 
 export async function sendQRCodeEmail(to, name, regId, eventName, qrCodeDataUrl, template = null) {
-  const base64Data = qrCodeDataUrl.replace(/^data:image\/png;base64,/, '');
-  const qrImgTag = '<img src="cid:qrcode" alt="QR Code" width="250" height="250" style="width:250px;height:250px;display:block;margin:0 auto;" />';
+  const qrImgTag = `<img src="${qrCodeDataUrl}" alt="QR Code" width="200" height="200" style="width:200px;height:200px;display:block;margin:0 auto;" />`;
 
   const vars = { name, reg_id: regId.split('-').pop(), event_name: eventName, qr_code: qrImgTag };
   const subject = applyTemplate(template?.subject || DEFAULT_SUBJECT, vars);
@@ -64,12 +63,6 @@ export async function sendQRCodeEmail(to, name, regId, eventName, qrCodeDataUrl,
     to,
     subject,
     html,
-    attachments: [{
-      filename: 'qrcode.png',
-      content: base64Data,
-      content_type: 'image/png',
-      content_id: 'qrcode',
-    }],
   });
 }
 
