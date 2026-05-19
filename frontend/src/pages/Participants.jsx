@@ -470,7 +470,11 @@ export default function Participants() {
     }
   };
 
-  useEffect(() => { load(); }, [eid]);
+  useEffect(() => {
+    load();
+    const timer = setInterval(load, 10000);
+    return () => clearInterval(timer);
+  }, [eid]);
 
   const units = [...new Set(participants.map(p => p.unit).filter(Boolean))].sort();
 

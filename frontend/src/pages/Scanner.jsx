@@ -6,7 +6,7 @@ import api from '../api/client';
 import Layout from '../components/Layout';
 import './Scanner.css';
 
-const RESULT_DISPLAY_MS = 10000;
+const RESULT_DISPLAY_MS = 4000;
 // Prevent the same token from being re-scanned within this window
 const SAME_TOKEN_COOLDOWN_MS = 8000;
 
@@ -46,10 +46,12 @@ export default function Scanner() {
       try {
         const { data } = await api.post(`/events/${eid}/participants/checkin`, { qr_token: token });
         setResult({ success: true, ...data.participant });
+        navigator.vibrate?.([100, 50, 100]);
       } catch (apiErr) {
         const msg = apiErr.response?.data?.error ?? '無效的 QR Code';
         const dup = apiErr.response?.data?.participant;
         setResult({ success: false, error: msg, ...dup });
+        navigator.vibrate?.(400);
       } finally {
         processingRef.current = false;
       }
@@ -98,25 +100,29 @@ export default function Scanner() {
           </div>
 
           {result && (
-            <div className={`result-card ${result.success ? 'success' : 'error'}`}>
+            <div
+              className={`result-overlay ${result.success ? 'success' : 'error'}`}
+              onClick={() => setResult(null)}
+            >
               {result.success ? (
                 <>
-                  <CheckCircle size={40} />
-                  <div className="result-title">報到成功！</div>
-                  <div className="result-name">{result.name}</div>
-                  <div className="result-details">
-                    <span>#{seqNumber(result.reg_id)}</span>
+                  <CheckCircle size={96} strokeWidth={1.5} />
+                  <div className="result-overlay-title">報到成功！</div>
+                  <div className="result-overlay-name">{result.name}</div>
+                  <div className="result-overlay-meta">
+                    {result.reg_id && <span>#{seqNumber(result.reg_id)}</span>}
                     {result.unit && <span>{result.unit}</span>}
                   </div>
                 </>
               ) : (
                 <>
-                  <XCircle size={40} />
-                  <div className="result-title">{result.error}</div>
-                  {result.name && <div className="result-name">{result.name}</div>}
-                  {result.unit && <div className="result-details"><span>{result.unit}</span></div>}
+                  <XCircle size={96} strokeWidth={1.5} />
+                  <div className="result-overlay-title">{result.error}</div>
+                  {result.name && <div className="result-overlay-name">{result.name}</div>}
+                  {result.unit && <div className="result-overlay-meta"><span>{result.unit}</span></div>}
                 </>
               )}
+              <div className="result-overlay-hint">點擊繼續掃碼</div>
             </div>
           )}
         </div>
