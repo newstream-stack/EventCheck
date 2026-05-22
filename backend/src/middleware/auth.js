@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import { canUserAccessEvent } from '../services/accessService.js';
 
 export function authenticate(req, res, next) {
   const token = req.headers.authorization?.split(' ')[1];
@@ -17,4 +18,14 @@ export function requireAdmin(req, res, next) {
     return res.status(403).json({ error: '需要管理者權限' });
   }
   next();
+}
+
+export function requireEventAccess(paramName = 'eid') {
+  return async (req, res, next) => {
+    const eventId = req.params[paramName];
+    if (await canUserAccessEvent(req.user, eventId)) {
+      return next();
+    }
+    return res.status(403).json({ error: '您沒有權限查看此活動' });
+  };
 }

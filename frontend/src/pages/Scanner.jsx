@@ -23,8 +23,20 @@ export default function Scanner() {
   const [cameraError, setCameraError] = useState(null);
 
   useEffect(() => {
-    api.get('/events').then(({ data }) => setEvent(data.find(e => e.event_id === eid)));
-  }, [eid]);
+    api.get('/events')
+      .then(({ data }) => {
+        const matchedEvent = data.find(e => e.event_id === eid);
+        if (!matchedEvent) {
+          setCameraError('您沒有權限查看此活動');
+          navigate('/events', { replace: true });
+          return;
+        }
+        setEvent(matchedEvent);
+      })
+      .catch(err => {
+        setCameraError(err.response?.data?.error ?? '載入活動失敗');
+      });
+  }, [eid, navigate]);
 
   useEffect(() => {
     const reader = new BrowserMultiFormatReader();
@@ -65,7 +77,7 @@ export default function Scanner() {
 
     return () => {
       clearTimeout(clearTimerRef.current);
-      try { reader.reset(); } catch (_) {}
+      try { reader.reset(); } catch { /* ignore device teardown errors */ }
     };
   }, [eid]);
 

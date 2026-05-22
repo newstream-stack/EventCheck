@@ -18,6 +18,39 @@
   flex-shrink: 0;
 }
 
+.event-access-list {
+  display: grid;
+  gap: 8px;
+  max-height: 200px;
+  overflow: auto;
+  padding: 10px 12px;
+  border: 1px solid var(--gray-200);
+  border-radius: 10px;
+  background: var(--gray-50);
+}
+
+.event-access-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--gray-700);
+}
+
+.access-help {
+  padding: 10px 12px;
+  border: 1px dashed var(--gray-300);
+  border-radius: 10px;
+  color: var(--gray-500);
+  font-size: 13px;
+}
+
+.access-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 @media (max-width: 768px) {
   .users-table-wrap {
     overflow-x: auto;

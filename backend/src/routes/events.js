@@ -1,15 +1,21 @@
 import { Router } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { getSheetData, appendRow, updateRow, deleteRow, ensureEventSheet } from '../services/sheetsService.js';
-import { authenticate, requireAdmin } from '../middleware/auth.js';
+import { authenticate, requireAdmin, requireEventAccess } from '../middleware/auth.js';
 import { DEFAULT_SUBJECT, DEFAULT_BODY } from '../services/emailService.js';
+import { getUserAccessibleEventIds } from '../services/accessService.js';
 
 const router = Router();
 router.use(authenticate);
 
 router.get('/', async (req, res) => {
   const events = await getSheetData('events');
-  res.json(events);
+  if (req.user.role === 'admin') {
+    return res.json(events);
+  }
+
+  const eventIds = await getUserAccessibleEventIds(req.user.user_id);
+  return res.json(events.filter(event => eventIds.includes(event.event_id)));
 });
 
 router.post('/', requireAdmin, async (req, res) => {
@@ -53,7 +59,7 @@ router.delete('/:id', requireAdmin, async (req, res) => {
   res.json({ message: '已刪除（參與者資料已保留）' });
 });
 
-router.get('/:id/email-template', async (req, res) => {
+router.get('/:id/email-template', requireEventAccess('id'), async (req, res) => {
   const templates = await getSheetData('email_templates');
   const tmpl = templates.find(t => t.event_id === req.params.id);
   if (!tmpl) {
@@ -62,7 +68,7 @@ router.get('/:id/email-template', async (req, res) => {
   res.json({ ...tmpl, is_default: false });
 });
 
-router.put('/:id/email-template', requireAdmin, async (req, res) => {
+router.put('/:id/email-template', requireAdmin, requireEventAccess('id'), async (req, res) => {
   const { subject, body_html } = req.body;
   if (!subject || !body_html) return res.status(400).json({ error: '請提供 subject 和 body_html' });
 

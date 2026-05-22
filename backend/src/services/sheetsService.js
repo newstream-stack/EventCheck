@@ -105,6 +105,10 @@ export async function ensureBaseSheets() {
   if (!templatesExists) {
     await createSheet('email_templates', ['event_id', 'subject', 'body_html']);
   }
+  const accessExists = await sheetExists('user_event_access');
+  if (!accessExists) {
+    await createSheet('user_event_access', ['user_id', 'event_id']);
+  }
 }
 
 export const emailTemplateHeaders = ['event_id', 'subject', 'body_html'];

@@ -8,10 +8,11 @@ import {
   ensureEventSheet, eventSheetName, participantHeaders,
 } from '../services/sheetsService.js';
 import { sendQRCodeEmail } from '../services/emailService.js';
-import { authenticate } from '../middleware/auth.js';
+import { authenticate, requireEventAccess } from '../middleware/auth.js';
 
 const router = Router({ mergeParams: true });
 router.use(authenticate);
+router.use(requireEventAccess('eid'));
 
 const upload = multer({ storage: multer.memoryStorage() });
 

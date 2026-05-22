@@ -8,10 +8,23 @@ import Modal from '../components/Modal';
 import Button from '../components/Button';
 import './AdminUsers.css';
 
-function UserForm({ initial = {}, onSave, onClose }) {
-  const [form, setForm] = useState({ name: '', email: '', role: 'staff', ...initial });
+function UserForm({ initial = {}, events, onSave, onClose }) {
+  const [form, setForm] = useState({
+    name: '',
+    email: '',
+    role: 'staff',
+    accessible_event_ids: [],
+    ...initial,
+  });
   const [loading, setLoading] = useState(false);
   const set = k => e => setForm(p => ({ ...p, [k]: e.target.value }));
+  const toggleEvent = eventId => {
+    setForm(prev => {
+      const ids = new Set(prev.accessible_event_ids ?? []);
+      ids.has(eventId) ? ids.delete(eventId) : ids.add(eventId);
+      return { ...prev, accessible_event_ids: [...ids] };
+    });
+  };
 
   const handleSubmit = async ev => {
     ev.preventDefault();
@@ -33,6 +46,27 @@ function UserForm({ initial = {}, onSave, onClose }) {
           <option value="admin">管理者</option>
         </select>
       </div>
+      <div className="field">
+        <label>可見活動</label>
+        {form.role === 'admin' ? (
+          <div className="access-help">管理者預設可查看所有活動，無需另外指派。</div>
+        ) : events.length === 0 ? (
+          <div className="access-help">目前尚無活動可指派。</div>
+        ) : (
+          <div className="event-access-list">
+            {events.map(event => (
+              <label key={event.event_id} className="event-access-item">
+                <input
+                  type="checkbox"
+                  checked={(form.accessible_event_ids ?? []).includes(event.event_id)}
+                  onChange={() => toggleEvent(event.event_id)}
+                />
+                <span>{event.event_name}</span>
+              </label>
+            ))}
+          </div>
+        )}
+      </div>
       {!initial.user_id && (
         <p style={{ fontSize: 13, color: 'var(--gray-500)' }}>
           建立後系統將自動產生密碼並發送至該 Email。
@@ -48,16 +82,26 @@ function UserForm({ initial = {}, onSave, onClose }) {
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
+  const [events, setEvents] = useState([]);
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState(null);
   const { user: me } = useAuth();
 
   const load = async () => {
-    const { data } = await api.get('/users');
-    setUsers(data);
+    const [usersRes, eventsRes] = await Promise.all([
+      api.get('/users'),
+      api.get('/events'),
+    ]);
+    setUsers(usersRes.data);
+    setEvents(eventsRes.data);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    const init = async () => {
+      await load();
+    };
+    init();
+  }, []);
 
   const handleAdd = async form => {
     await api.post('/users', form);
@@ -98,6 +142,7 @@ export default function AdminUsers() {
               <th>姓名</th>
               <th>Email</th>
               <th>角色</th>
+              <th>可見活動</th>
               <th>建立時間</th>
               <th style={{ width: 80 }}>操作</th>
             </tr>
@@ -118,6 +163,19 @@ export default function AdminUsers() {
                     ? <span className="badge success"><Shield size={11} /> 管理者</span>
                     : <span className="badge gray"><User size={11} /> 工作人員</span>}
                 </td>
+                <td>
+                  {u.role === 'admin'
+                    ? <span className="badge success">全部活動</span>
+                    : (
+                      <div className="access-badges">
+                        {(u.accessible_event_ids ?? []).length === 0
+                          ? <span className="badge gray">未指派</span>
+                          : events
+                            .filter(event => (u.accessible_event_ids ?? []).includes(event.event_id))
+                            .map(event => <span key={event.event_id} className="badge gray">{event.event_name}</span>)}
+                      </div>
+                    )}
+                </td>
                 <td style={{ color: 'var(--gray-500)', fontSize: 12 }}>
                   {u.created_at ? new Date(u.created_at).toLocaleDateString('zh-TW') : '-'}
                 </td>
@@ -135,12 +193,12 @@ export default function AdminUsers() {
 
       {showAdd && (
         <Modal title="新增使用者" onClose={() => setShowAdd(false)}>
-          <UserForm onSave={handleAdd} onClose={() => setShowAdd(false)} />
+          <UserForm events={events} onSave={handleAdd} onClose={() => setShowAdd(false)} />
         </Modal>
       )}
       {editing && (
         <Modal title="編輯使用者" onClose={() => setEditing(null)}>
-          <UserForm initial={editing} onSave={handleEdit} onClose={() => setEditing(null)} />
+          <UserForm initial={editing} events={events} onSave={handleEdit} onClose={() => setEditing(null)} />
         </Modal>
       )}
     </Layout>

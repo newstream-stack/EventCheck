@@ -8,6 +8,7 @@ import {
 import { QRCodeSVG } from 'qrcode.react';
 import toast from 'react-hot-toast';
 import api from '../api/client';
+import { useAuth } from '../context/AuthContext';
 import Layout from '../components/Layout';
 import Modal from '../components/Modal';
 import Button from '../components/Button';
@@ -129,6 +130,7 @@ function EditForm({ participant, onSave, onClose }) {
 
 function RichEditor({ value, onChange }) {
   const editorRef = useRef(null);
+  const lastHtmlRef = useRef(value);
   const [htmlMode, setHtmlMode] = useState(false);
 
   // Set innerHTML on mount
@@ -215,7 +217,7 @@ function RichEditor({ value, onChange }) {
 
   const handleInput = () => {
     const html = editorRef.current?.innerHTML ?? '';
-    lastHtml.current = html;
+    lastHtmlRef.current = html;
     onChange(html);
   };
 
@@ -226,7 +228,7 @@ function RichEditor({ value, onChange }) {
     } else {
       // HTML → visual: push textarea value into editor
       if (editorRef.current) editorRef.current.innerHTML = value;
-      lastHtml.current = value;
+      lastHtmlRef.current = value;
       setHtmlMode(false);
     }
   };
@@ -368,7 +370,7 @@ function QRModal({ participant, eventName, onClose }) {
         <div class="meta">#${seq}${participant.unit ? ' · ' + participant.unit : ''}</div>
         <div class="meta" style="margin-top:4px">${eventName ?? ''}</div>
       </div>
-      <script>window.onload = () => { window.print(); window.close(); }<\/script>
+      <script>window.onload = () => { window.print(); window.close(); }</script>
       </body></html>
     `);
     win.document.close();
@@ -439,6 +441,7 @@ function ParticipantCard({ p, selected, onToggle, onSendOne, onDelete, onShowQR,
 export default function Participants() {
   const { eid } = useParams();
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const [participants, setParticipants] = useState([]);
   const [event, setEvent] = useState(null);
   const [stats, setStats] = useState(null);
@@ -466,15 +469,24 @@ export default function Participants() {
       setEvent(eRes.data.find(e => e.event_id === eid));
       setStats(sRes.data);
     } catch (err) {
+      if (err.response?.status === 403) {
+        toast.error('您沒有權限查看此活動');
+        navigate('/events', { replace: true });
+        return;
+      }
       toast.error('載入資料失敗：' + (err.response?.data?.error ?? err.message));
     }
   };
 
   useEffect(() => {
-    load();
-    const timer = setInterval(load, 10000);
+    const refresh = async () => {
+      await load();
+    };
+
+    refresh();
+    const timer = setInterval(refresh, 10000);
     return () => clearInterval(timer);
-  }, [eid]);
+  }, [eid, navigate]);
 
   const units = [...new Set(participants.map(p => p.unit).filter(Boolean))].sort();
 
@@ -588,9 +600,11 @@ export default function Participants() {
           <Button variant="ghost" size="sm" onClick={() => navigate(`/events/${eid}/checkin`)}>
             <ScanLine size={14} /> <span className="btn-label">掃碼報到</span>
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => setShowEmailTemplate(true)}>
-            <Settings size={14} /> <span className="btn-label">Email 設定</span>
-          </Button>
+          {isAdmin && (
+            <Button variant="ghost" size="sm" onClick={() => setShowEmailTemplate(true)}>
+              <Settings size={14} /> <span className="btn-label">Email 設定</span>
+            </Button>
+          )}
           <Button variant="secondary" size="sm" onClick={() => fileRef.current.click()}>
             <Upload size={14} /> <span className="btn-label">匯入</span>
           </Button>
