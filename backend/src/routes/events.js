@@ -68,7 +68,7 @@ router.get('/:id/email-template', requireEventAccess('id'), async (req, res) => 
   res.json({ ...tmpl, is_default: false });
 });
 
-router.put('/:id/email-template', requireAdmin, requireEventAccess('id'), async (req, res) => {
+router.put('/:id/email-template', requireEventAccess('id'), async (req, res) => {
   const { subject, body_html } = req.body;
   if (!subject || !body_html) return res.status(400).json({ error: '請提供 subject 和 body_html' });
 
