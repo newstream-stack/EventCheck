@@ -600,11 +600,9 @@ export default function Participants() {
           <Button variant="ghost" size="sm" onClick={() => navigate(`/events/${eid}/checkin`)}>
             <ScanLine size={14} /> <span className="btn-label">掃碼報到</span>
           </Button>
-          {isAdmin && (
-            <Button variant="ghost" size="sm" onClick={() => setShowEmailTemplate(true)}>
-              <Settings size={14} /> <span className="btn-label">Email 設定</span>
-            </Button>
-          )}
+          <Button variant="ghost" size="sm" onClick={() => setShowEmailTemplate(true)}>
+            <Settings size={14} /> <span className="btn-label">Email 設定</span>
+          </Button>
           <Button variant="secondary" size="sm" onClick={() => fileRef.current.click()}>
             <Upload size={14} /> <span className="btn-label">匯入</span>
           </Button>
