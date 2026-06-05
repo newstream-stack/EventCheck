@@ -22,6 +22,14 @@ function generateRegId(eventId, seq) {
   return `${eventId.slice(0, 6).toUpperCase()}-${String(seq).padStart(4, '0')}`;
 }
 
+function nextSeq(existing) {
+  const max = existing.reduce((m, p) => {
+    const n = parseInt(p.reg_id?.split('-').pop(), 10);
+    return isNaN(n) ? m : Math.max(m, n);
+  }, 0);
+  return max + 1;
+}
+
 function buildParticipantRow(p, regId, qrToken) {
   return [
     regId,
@@ -63,8 +71,7 @@ router.post('/', async (req, res) => {
 
   await ensureEventSheet(eid);
   const existing = await getSheetData(eventSheetName(eid));
-  const seq = existing.length + 1;
-  const regId = generateRegId(eid, seq);
+  const regId = generateRegId(eid, nextSeq(existing));
   const qrToken = uuidv4();
 
   await appendRow(eventSheetName(eid), buildParticipantRow({ name, email, phone, unit, gender }, regId, qrToken));
@@ -84,7 +91,7 @@ router.post('/import', upload.single('file'), async (req, res) => {
 
   await ensureEventSheet(eid);
   const existing = await getSheetData(eventSheetName(eid));
-  let seq = existing.length + 1;
+  let seq = nextSeq(existing);
 
   // Build a case/space-insensitive lookup for each row
   const col = (row, ...keys) => {
