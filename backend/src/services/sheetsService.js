@@ -19,6 +19,24 @@ function _cacheSet(key, data, ttl) {
 
 function _invalidate(key) { _cache.delete(key); }
 
+// ── Retry helper ─────────────────────────────────────────────────────────────
+
+async function withRetry(fn, maxAttempts = 3) {
+  let lastErr;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      const status = err?.response?.status ?? err?.code;
+      const isTransient = status === 500 || status === 503 || status === 429;
+      if (!isTransient || attempt === maxAttempts) throw err;
+      await new Promise(r => setTimeout(r, 1000 * 2 ** (attempt - 1)));
+      lastErr = err;
+    }
+  }
+  throw lastErr;
+}
+
 // ── Generic helpers ──────────────────────────────────────────────────────────
 
 export async function getSheetData(sheetName) {
@@ -27,10 +45,10 @@ export async function getSheetData(sheetName) {
   if (cached !== undefined) return cached;
 
   const sheets = await getSheets();
-  const res = await sheets.spreadsheets.values.get({
+  const res = await withRetry(() => sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
     range: `${sheetName}!A:Z`,
-  });
+  }));
   const [headers, ...rows] = res.data.values || [];
   const result = headers
     ? rows.map(row => Object.fromEntries(headers.map((h, i) => [h, row[i] ?? ''])))
@@ -41,12 +59,12 @@ export async function getSheetData(sheetName) {
 
 export async function appendRow(sheetName, values) {
   const sheets = await getSheets();
-  await sheets.spreadsheets.values.append({
+  await withRetry(() => sheets.spreadsheets.values.append({
     spreadsheetId: SPREADSHEET_ID,
     range: `${sheetName}!A1`,
     valueInputOption: 'RAW',
     requestBody: { values: [values] },
-  });
+  }));
   _invalidate(`data:${sheetName}`);
 }
 
@@ -54,12 +72,12 @@ export async function updateRow(sheetName, rowIndex, values) {
   // rowIndex is 1-based data row (header is row 1, first data row is 2)
   const sheets = await getSheets();
   const row = rowIndex + 1;
-  await sheets.spreadsheets.values.update({
+  await withRetry(() => sheets.spreadsheets.values.update({
     spreadsheetId: SPREADSHEET_ID,
     range: `${sheetName}!A${row}`,
     valueInputOption: 'RAW',
     requestBody: { values: [values] },
-  });
+  }));
   _invalidate(`data:${sheetName}`);
 }
 
@@ -68,7 +86,7 @@ export async function deleteRow(sheetName, rowIndex) {
   const sheetId = await _getSheetId(sheets, sheetName);
   if (sheetId === null) throw new Error(`Sheet "${sheetName}" not found`);
 
-  await sheets.spreadsheets.batchUpdate({
+  await withRetry(() => sheets.spreadsheets.batchUpdate({
     spreadsheetId: SPREADSHEET_ID,
     requestBody: {
       requests: [{
@@ -82,7 +100,7 @@ export async function deleteRow(sheetName, rowIndex) {
         },
       }],
     },
-  });
+  }));
   _invalidate(`data:${sheetName}`);
 }
 
